@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 from pathlib import Path
 import pickle
 import gdown
+import tempfile
 
 
 # =======================
@@ -28,32 +29,37 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     """Load the stem-labeled dataset."""
-    data_dir = Path(__file__).parent.parent / 'data'
-    pkl_path = data_dir / 'df_stem_labeled.pkl'
+    
+    # Temporary directory in Streamlit Cloud
+    temp_dir = tempfile.mkdtemp()
 
-    if pkl_path.exists():
+    # Path for the file in the temporary directory
+    pkl_path = os.path.join(temp_dir, 'df_stem_labeled.pkl')
+    
+    if os.path.exists(pkl_path):
         df = pd.read_pickle(pkl_path)
     else:
         # Fallback: try to download from Google Drive if not found locally
         st.info("Data file not found locally. Downloading from Google Drive...")
 
         # URL of your file in Google Drive (replace with your actual file ID)
-        file_id = '1yP6iTubQZ_wtlbJxqngWCwYz4pv6NsfO'
+        file_id = 'your-google-file-id-here'  # Replace with the actual file ID
         url = f'https://drive.google.com/uc?id={file_id}'
 
-        # Download the file using gdown
-        gdown.download(url, str(pkl_path), quiet=False)
-
-        if pkl_path.exists():
+        try:
+            # Download the file using gdown to the temporary directory
+            gdown.download(url, pkl_path, quiet=False)
             st.success("File downloaded successfully!")
+            
+            # Load the data after download
             df = pd.read_pickle(pkl_path)
-        else:
-            st.error("Failed to download the data file.")
+        except Exception as e:
+            st.error(f"Error downloading the file: {e}")
             st.stop()
-
+    
     # Select relevant columns
     df = df[['Language_ID', 'wd', 'mb', 'morph_label', 'gloss', 'coarse_pos']].copy()
-    
+
     return df
 
 
