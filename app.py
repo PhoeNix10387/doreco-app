@@ -43,7 +43,7 @@ def load_data():
         st.info("Data file not found locally. Downloading from Google Drive...")
 
         # URL of your file in Google Drive (replace with your actual file ID)
-        file_id = 'your-google-file-id-here'  # Replace with the actual file ID
+        file_id = '1yP6iTubQZ_wtlbJxqngWCwYz4pv6NsfO'  # Replace with the actual file ID
         url = f'https://drive.google.com/uc?id={file_id}'
 
         try:
