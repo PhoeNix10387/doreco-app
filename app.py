@@ -10,6 +10,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pathlib import Path
 import pickle
+import gdown
 
 
 # =======================
@@ -29,18 +30,27 @@ def load_data():
     """Load the stem-labeled dataset."""
     data_dir = Path(__file__).parent.parent / 'data'
     pkl_path = data_dir / 'df_stem_labeled.pkl'
-    
+
     if pkl_path.exists():
         df = pd.read_pickle(pkl_path)
     else:
-        # Fallback: try to load CSV
-        csv_path = data_dir / 'df_stem_labeled.csv'
-        if csv_path.exists():
-            df = pd.read_csv(csv_path)
+        # Fallback: try to download from Google Drive if not found locally
+        st.info("Data file not found locally. Downloading from Google Drive...")
+
+        # URL of your file in Google Drive (replace with your actual file ID)
+        file_id = '1yP6iTubQZ_wtlbJxqngWCwYz4pv6NsfO'
+        url = f'https://drive.google.com/uc?id={file_id}'
+
+        # Download the file using gdown
+        gdown.download(url, str(pkl_path), quiet=False)
+
+        if pkl_path.exists():
+            st.success("File downloaded successfully!")
+            df = pd.read_pickle(pkl_path)
         else:
-            st.error(f"Data file not found at {pkl_path} or {csv_path}")
+            st.error("Failed to download the data file.")
             st.stop()
-    
+
     # Select relevant columns
     df = df[['Language_ID', 'wd', 'mb', 'morph_label', 'gloss', 'coarse_pos']].copy()
     
