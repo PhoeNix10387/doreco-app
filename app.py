@@ -36,26 +36,44 @@ def load_data():
     # Path for the file in the temporary directory
     pkl_path = os.path.join(temp_dir, 'df_stem_labeled.pkl')
     
+    # Check if the file is already downloaded
     if os.path.exists(pkl_path):
         df = pd.read_pickle(pkl_path)
     else:
         # Fallback: try to download from Google Drive if not found locally
-        st.info("Data file not found locally. Downloading from Google Drive...")
+        if 'download_status' not in st.session_state:
+            st.session_state.download_status = None  # Reset the status on each app run
 
-        # URL of your file in Google Drive (replace with your actual file ID)
-        file_id = '1yP6iTubQZ_wtlbJxqngWCwYz4pv6NsfO'  # Replace with the actual file ID
-        url = f'https://drive.google.com/uc?id={file_id}'
+        # Display message only once during download process
+        if st.session_state.download_status is None:
+            st.session_state.download_status = 'downloading'
+            st.info("Data file not found locally. Downloading from Google Drive...")
 
-        try:
-            # Download the file using gdown to the temporary directory
-            gdown.download(url, pkl_path, quiet=False)
-            st.success("File downloaded successfully!")
-            
-            # Load the data after download
-            df = pd.read_pickle(pkl_path)
-        except Exception as e:
-            st.error(f"Error downloading the file: {e}")
+            # URL of your file in Google Drive (replace with your actual file ID)
+            file_id = '1yP6iTubQZ_wtlbJxqngWCwYz4pv6NsfO'  # Replace with the actual file ID
+            url = f'https://drive.google.com/uc?id={file_id}'
+
+            try:
+                # Download the file using gdown to the temporary directory
+                gdown.download(url, pkl_path, quiet=False)
+                st.success("File downloaded successfully!")
+                
+                # Load the data after download
+                df = pd.read_pickle(pkl_path)
+                
+                # Reset status after success
+                st.session_state.download_status = 'done'
+            except Exception as e:
+                st.error(f"Error downloading the file: {e}")
+                st.session_state.download_status = 'error'
+                st.stop()
+        elif st.session_state.download_status == 'error':
+            st.error("Failed to download the data file. Please try again.")
+            st.session_state.download_status = None  # Reset to allow retry on next run
             st.stop()
+        elif st.session_state.download_status == 'done':
+            # If download was done previously, load the data without message
+            df = pd.read_pickle(pkl_path)
     
     # Select relevant columns
     df = df[['Language_ID', 'wd', 'mb', 'morph_label', 'gloss', 'coarse_pos']].copy()
